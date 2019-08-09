@@ -21,7 +21,7 @@ class BurgerBuilder extends Component {
         },
         totalPrice: 4,
         orderNowDisabled: true,
-        orderNowClicked: false
+        purchasing: false
     }
 
     addIngredientHandler = (type) => {
@@ -53,7 +53,15 @@ class BurgerBuilder extends Component {
     };
 
     orderNowClickedHandler = () => {
-        this.setState({ orderNowClicked: true });
+        this.setState({ purchasing: true });
+    };
+
+    orderCanceledHandler = () => {
+        this.setState({ purchasing: false })
+    };
+
+    orderContinueHandler = () => {
+        alert('You continue')
     };
 
     render() {
@@ -64,8 +72,11 @@ class BurgerBuilder extends Component {
         // { salad: true, meat: false...}
         return (
             <React.Fragment>
-                <Modal show={this.state.orderNowClicked}>
-                    <OrderSummary ingredients={this.state.ingredients} />
+                <Modal show={this.state.purchasing} backdropClicked={this.orderCanceledHandler}>
+                    <OrderSummary
+                        ingredients={this.state.ingredients}
+                        cancel={this.orderCanceledHandler}
+                        continue={this.orderContinueHandler} />
                 </Modal>
                 <Burger ingredients={this.state.ingredients} />
                 <BuildControls
