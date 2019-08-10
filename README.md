@@ -1,3 +1,5 @@
+This application supports mobile layout, change the width of your browser to see mobile side drawer.
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
