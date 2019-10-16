@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import Burger from '../../components/Burger/Burger';
 import BuildControls from '../../components/Burger/BuildControls/BuildControls';
 import Modal from '../../components/UI/Modal/Modal';
@@ -6,66 +7,30 @@ import OrderSummary from '../../components/Burger/OrderSummary/OrderSummary';
 import axios from '../../axios-orders';
 import Spinner from '../../components/UI/Spinner/Spinner';
 import withErrorHandler from '../../hoc/withErrorHandler/withErrorHandler';
-
-const INGREDIENT_PRICES = {
-    salad: 0.5,
-    bacon: 0.7,
-    cheese: 0.4,
-    meat: 1.3
-};
+import * as actionTypes from '../../store/actions';
 
 class BurgerBuilder extends Component {
     state = {
-        ingredients: null,
-        // {
-        //     salad: 0,
-        //     bacon: 0,
-        //     cheese: 0,
-        //     meat: 0
-        // },
-        totalPrice: 4,
-        orderNowDisabled: true,
         purchasing: false,
         loading: false,
         error: false
     }
 
     componentDidMount() {
-        axios.get('ingredients.json')
-            .then(res => {
-                this.setState({ ingredients: res.data });
-            }).catch(err => {
-                this.setState({ error: true });
-            });
+        // axios.get('ingredients.json')
+        //     .then(res => {
+        //         this.setState({ ingredients: res.data });
+        //     }).catch(err => {
+        //         this.setState({ error: true });
+        //     });
     }
 
-    addIngredientHandler = (type) => {
-        const updatedIngredients = { ...this.state.ingredients };
-        updatedIngredients[type] = this.state.ingredients[type] + 1;
-        const updatedTotalPrice = this.state.totalPrice + INGREDIENT_PRICES[type];
-        this.setState({
-            ingredients: updatedIngredients,
-            totalPrice: updatedTotalPrice,
-            orderNowDisabled: false
-        });
-    };
 
-    removeIngredientHandler = (type) => {
-        const updatedIngredients = { ...this.state.ingredients };
-        if (this.state.ingredients[type] <= 0) return;
-        updatedIngredients[type] = this.state.ingredients[type] - 1;
-        const updatedTotalPrice = this.state.totalPrice - INGREDIENT_PRICES[type];
-        const updatedOrderNowDisabled =
-            Object.keys(updatedIngredients)
-                .map(igKey => updatedIngredients[igKey])
-                .reduce((sum, el) => sum + el, 0)
-            <= 0;
-        this.setState({
-            ingredients: updatedIngredients,
-            totalPrice: updatedTotalPrice,
-            orderNowDisabled: updatedOrderNowDisabled
-        });
-    };
+    updatedOrderNowDisabled = (ingredients) =>
+        Object.keys(ingredients)
+            .map(igKey => ingredients[igKey])
+            .reduce((sum, el) => sum + el, 0)
+        <= 0;
 
     orderNowClickedHandler = () => {
         this.setState({ purchasing: true });
@@ -76,44 +41,34 @@ class BurgerBuilder extends Component {
     };
 
     orderContinueHandler = () => {
-        // alert('You continue');
-        const queryParams = [];
-        for (let i in this.state.ingredients) {
-            queryParams.push(encodeURIComponent(i) + '=' + encodeURIComponent(this.state.ingredients[i]));
-        }
-        queryParams.push('price=' + this.state.totalPrice);
-        const queryString = queryParams.join('&');
-        this.props.history.push({
-            pathname: '/checkout',
-            search: '?' + queryString
-        });
+        this.props.history.push('/checkout');
     };
 
     render() {
-        const disabledInfo = { ...this.state.ingredients }
+        const disabledInfo = { ...this.props.ings }
         for (let key in disabledInfo) {
             disabledInfo[key] = disabledInfo[key] <= 0;
         };
         // { salad: true, meat: false...}
         let orderSummary = null;
         let burger = this.state.error ? <p>Burger Ingredients Cannot be loadded</p> : <Spinner />;
-        if (this.state.ingredients) {
+        if (this.props.ings) {
             burger = (
                 <React.Fragment>
-                    <Burger ingredients={this.state.ingredients} />
+                    <Burger ingredients={this.props.ings} />
                     <BuildControls
-                        ingredientAdded={this.addIngredientHandler}
-                        ingredientRemoved={this.removeIngredientHandler}
+                        ingredientAdded={this.props.onIngredientAdded}
+                        ingredientRemoved={this.props.onIngredientRemoved}
                         disabledInfo={disabledInfo}
-                        price={this.state.totalPrice}
-                        orderNowDisabled={this.state.orderNowDisabled}
+                        price={this.props.price}
+                        orderNowDisabled={this.updatedOrderNowDisabled(this.props.ings)}
                         orderNowClicked={this.orderNowClickedHandler}
                     />
                 </React.Fragment>
             );
             orderSummary = orderSummary = <OrderSummary
-                ingredients={this.state.ingredients}
-                price={this.state.totalPrice}
+                ingredients={this.props.ings}
+                price={this.props.price}
                 cancel={this.orderCanceledHandler}
                 continue={this.orderContinueHandler} />;
         }
@@ -132,4 +87,18 @@ class BurgerBuilder extends Component {
     }
 }
 
-export default withErrorHandler(BurgerBuilder, axios);
+const mapStateToProps = state => {
+    return {
+        ings: state.ingredients,
+        price: state.totalPrice
+    }
+};
+
+const mapDispatchToProps = dispatch => {
+    return {
+        onIngredientAdded: (ingName) => dispatch({ type: actionTypes.ADD_INGREDIENT, ingredientName: ingName }),
+        onIngredientRemoved: (ingName) => dispatch({ type: actionTypes.REMOVE_INGREDIENT, ingredientName: ingName })
+    }
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(withErrorHandler(BurgerBuilder, axios));
