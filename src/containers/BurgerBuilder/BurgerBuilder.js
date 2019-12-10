@@ -25,8 +25,7 @@ class BurgerBuilder extends Component {
         //     });
     }
 
-
-    updatedOrderNowDisabled = (ingredients) =>
+    updatedOrderNowDisabled = ingredients =>
         Object.keys(ingredients)
             .map(igKey => ingredients[igKey])
             .reduce((sum, el) => sum + el, 0)
@@ -66,7 +65,7 @@ class BurgerBuilder extends Component {
                     />
                 </React.Fragment>
             );
-            orderSummary = orderSummary = <OrderSummary
+            orderSummary = <OrderSummary
                 ingredients={this.props.ings}
                 price={this.props.price}
                 cancel={this.orderCanceledHandler}
