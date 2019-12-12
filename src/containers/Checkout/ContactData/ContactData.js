@@ -6,7 +6,7 @@ import classes from './ContactData.module.css';
 import axios from '../../../axios-orders';
 import Input from '../../../components/UI/Input/Input';
 import withErrorHandler from '../../../hoc/withErrorHandler/withErrorHandler';
-import * as actions from '../../../store/actions/index';
+import { purchaseBurger } from '../../../store/actions/index';
 
 class ContactData extends Component {
     state = {
@@ -83,7 +83,7 @@ class ContactData extends Component {
                 elementConfig: {
                     options: [
                         { value: 'fastest', displayValue: 'Fastest' },
-                        { value: 'cheapest', displayValue: 'Cheapest' },
+                        { value: 'cheapest', displayValue: 'Cheapest' }
                     ]
                 },
                 value: 'fastest',
@@ -92,9 +92,9 @@ class ContactData extends Component {
             }
         },
         formIsValid: false
-    }
+    };
 
-    orderHandler = (event) => {
+    orderHandler = event => {
         // eslint-disable-next-line no-restricted-globals
         event.preventDefault();
         let formData = {};
@@ -105,25 +105,31 @@ class ContactData extends Component {
             ingredients: this.props.ings,
             price: this.props.price,
             orderData: formData
-        }
+        };
 
-        this.props.onOrderBurger(order);
-    }
+        this.props.purchaseBurger(order);
+    };
 
     inputChangedHandler = (event, inputId) => {
         const updatedOrderForm = { ...this.state.orderForm };
         const updatedFormElement = { ...updatedOrderForm[inputId] };
         updatedFormElement.value = event.target.value;
-        updatedFormElement.valid = this.checkVaildity(updatedFormElement.value, updatedFormElement.validation);
+        updatedFormElement.valid = this.checkVaildity(
+            updatedFormElement.value,
+            updatedFormElement.validation
+        );
         updatedFormElement.touched = true;
         updatedOrderForm[inputId] = updatedFormElement;
 
         let formIsValid = true;
         for (let inputId in updatedOrderForm) {
-            formIsValid = updatedOrderForm[inputId].valid && formIsValid
+            formIsValid = updatedOrderForm[inputId].valid && formIsValid;
         }
-        this.setState({ orderForm: updatedOrderForm, formIsValid: formIsValid });
-    }
+        this.setState({
+            orderForm: updatedOrderForm,
+            formIsValid: formIsValid
+        });
+    };
 
     checkVaildity(value, rules) {
         let isValid = true;
@@ -148,24 +154,31 @@ class ContactData extends Component {
             formElementsArray.push({
                 id: key,
                 config: this.state.orderForm[key]
-            })
+            });
         }
-        let form = (<form onSubmit={this.orderHandler}>
-            {formElementsArray.map(formElement =>
-                <Input
-                    key={formElement.id}
-                    elementType={formElement.config.elementType}
-                    elementConfig={formElement.config.elementConfig}
-                    value={formElement.config.value}
-                    invalid={!formElement.config.valid}
-                    shouldValidate={formElement.config.validation}
-                    touched={formElement.config.touched}
-                    changed={(event) => this.inputChangedHandler(event, formElement.id)} />
-            )}
-            <Button btnType="Success" disabled={!this.state.formIsValid}>ORDER</Button>
-        </form>);
+        let form = (
+            <form onSubmit={this.orderHandler}>
+                {formElementsArray.map(formElement => (
+                    <Input
+                        key={formElement.id}
+                        elementType={formElement.config.elementType}
+                        elementConfig={formElement.config.elementConfig}
+                        value={formElement.config.value}
+                        invalid={!formElement.config.valid}
+                        shouldValidate={formElement.config.validation}
+                        touched={formElement.config.touched}
+                        changed={event =>
+                            this.inputChangedHandler(event, formElement.id)
+                        }
+                    />
+                ))}
+                <Button btnType="Success" disabled={!this.state.formIsValid}>
+                    ORDER
+                </Button>
+            </form>
+        );
         if (this.props.loading) {
-            form = <Spinner />
+            form = <Spinner />;
         }
         return (
             <div className={classes.ContactData}>
@@ -181,13 +194,12 @@ const mapStateToProps = state => {
         ings: state.burgerBuilder.ingredients,
         price: state.burgerBuilder.totalPrice,
         loading: state.order.loading
-    }
+    };
 };
 
-const mapDispatchToProps = dispatch => {
-    return {
-        onOrderBurger: (orderData) => dispatch(actions.purchaseBurger(orderData))
-    }
-};
+const mapDispatchToProps = { purchaseBurger };
 
-export default connect(mapStateToProps, mapDispatchToProps)(withErrorHandler(ContactData, axios));
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(withErrorHandler(ContactData, axios));
